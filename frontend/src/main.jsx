@@ -7,7 +7,7 @@ import App from './App.jsx'
 // For example: ThemeProvider, AuthProvider, etc.
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <App />
+  <StrictMode> 
+      <App />
   </StrictMode>
 )
