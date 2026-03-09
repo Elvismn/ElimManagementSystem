@@ -5,13 +5,13 @@ import Dashboard from './pages/Dashboard'
 import Layout from './components/Layout'
 import Settings from './pages/Settings'
 import Students from './pages/Students'
-import Parents from './components/Parents'
+import Parents from './pages/Parents'
+import Staff from './pages/Staff'
+import Departments from './pages/Department'
 import './App.css'
 
 // Placeholder components for other routes
-const Staff = () => <div className="p-6 bg-white rounded-lg shadow">Staff Page (Coming Soon)</div>
 const Vehicles = () => <div className="p-6 bg-white rounded-lg shadow">Vehicles Page (Coming Soon)</div>
-const Departments = () => <div className="p-6 bg-white rounded-lg shadow">Departments Page (Coming Soon)</div>
 const Stakeholders = () => <div className="p-6 bg-white rounded-lg shadow">Stakeholders Page (Coming Soon)</div>
 const Maintenance = () => <div className="p-6 bg-white rounded-lg shadow">Maintenance Page (Coming Soon)</div>
 const FuelRecords = () => <div className="p-6 bg-white rounded-lg shadow">Fuel Records Page (Coming Soon)</div>
