@@ -6,7 +6,6 @@ const Department = require("../models/Department");
 // @access  Private (Admin only)
 const createStaff = async (req, res) => {
   try {
-    // Check if email already exists
     const existingEmail = await Staff.findOne({ email: req.body.email });
     if (existingEmail) {
       return res.status(400).json({
@@ -15,7 +14,6 @@ const createStaff = async (req, res) => {
       });
     }
 
-    // Check if employeeId already exists
     const existingEmployeeId = await Staff.findOne({ employeeId: req.body.employeeId });
     if (existingEmployeeId) {
       return res.status(400).json({
@@ -24,7 +22,6 @@ const createStaff = async (req, res) => {
       });
     }
 
-    // Check if phone already exists (optional)
     if (req.body.phone) {
       const phoneExists = await Staff.findOne({ phone: req.body.phone });
       if (phoneExists) {
@@ -37,11 +34,10 @@ const createStaff = async (req, res) => {
 
     const staff = await Staff.create(req.body);
     
-    // Populate department and subjects
-    await staff.populate([
-      { path: 'department', select: 'name headOfDepartment' },
-      { path: 'subjects', select: 'name code' }
-    ]);
+    await staff.populate({
+      path: 'department',
+      select: 'name headOfDepartment'
+    });
 
     res.status(201).json({
       success: true,
@@ -73,14 +69,12 @@ const getStaff = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
     
-    // Build filter
     const filter = {};
     if (department) filter.department = department;
     if (position) filter.position = position;
     if (status) filter.status = status;
     if (employmentType) filter.employmentType = employmentType;
     
-    // Search functionality
     if (search) {
       filter.$or = [
         { firstName: { $regex: search, $options: 'i' } },
@@ -91,23 +85,22 @@ const getStaff = async (req, res) => {
       ];
     }
 
-    // Build sort
     const sort = {};
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    // Execute query with pagination
     const staff = await Staff.find(filter)
-      .populate('department', 'name headOfDepartment')
-      .populate('subjects', 'name code')
+      .populate({
+        path: 'department',
+        select: 'name headOfDepartment',
+        match: { _id: { $exists: true } }
+      })
       .sort(sort)
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit))
       .lean();
 
-    // Get total count for pagination
     const total = await Staff.countDocuments(filter);
 
-    // Get summary statistics
     const stats = await Staff.aggregate([
       { $group: {
         _id: null,
@@ -118,13 +111,19 @@ const getStaff = async (req, res) => {
       }}
     ]);
 
-    // Department distribution
-    const departmentDistribution = await Staff.aggregate([
-      { $group: { _id: "$department", count: { $sum: 1 } } },
-      { $lookup: { from: "departments", localField: "_id", foreignField: "_id", as: "dept" } },
-      { $unwind: { path: "$dept", preserveNullAndEmptyArrays: true } },
-      { $project: { department: "$dept.name", count: 1 } }
-    ]);
+    const departmentDistribution = [];
+    const deptMap = new Map();
+    
+    for (const member of staff) {
+      if (member.department && member.department.name) {
+        const deptName = member.department.name;
+        deptMap.set(deptName, (deptMap.get(deptName) || 0) + 1);
+      }
+    }
+    
+    for (const [deptName, count] of deptMap.entries()) {
+      departmentDistribution.push({ department: deptName, count });
+    }
 
     res.json({
       success: true,
@@ -142,6 +141,7 @@ const getStaff = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error('❌ Get staff error:', error);
     res.status(500).json({
       success: false,
       error: error.message
@@ -156,7 +156,6 @@ const getOneStaff = async (req, res) => {
   try {
     const staff = await Staff.findById(req.params.id)
       .populate('department', 'name headOfDepartment description')
-      .populate('subjects', 'name code gradeLevel')
       .populate('performanceReviews.reviewer', 'firstName lastName employeeId')
       .lean();
 
@@ -167,7 +166,6 @@ const getOneStaff = async (req, res) => {
       });
     }
 
-    // Add computed fields
     staff.age = staff.dateOfBirth ? 
       Math.floor((new Date() - new Date(staff.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000)) : null;
     
@@ -191,7 +189,6 @@ const getOneStaff = async (req, res) => {
 // @access  Private (Admin only)
 const updateStaff = async (req, res) => {
   try {
-    // Check if email is being updated and if it's unique
     if (req.body.email) {
       const existingEmail = await Staff.findOne({ 
         email: req.body.email,
@@ -205,7 +202,6 @@ const updateStaff = async (req, res) => {
       }
     }
 
-    // Check if employeeId is being updated and if it's unique
     if (req.body.employeeId) {
       const existingEmployeeId = await Staff.findOne({ 
         employeeId: req.body.employeeId,
@@ -219,7 +215,6 @@ const updateStaff = async (req, res) => {
       }
     }
 
-    // Check if phone is being updated and if it's unique
     if (req.body.phone) {
       const phoneExists = await Staff.findOne({ 
         phone: req.body.phone,
@@ -238,8 +233,7 @@ const updateStaff = async (req, res) => {
       req.body,
       { new: true, runValidators: true }
     )
-    .populate('department', 'name headOfDepartment')
-    .populate('subjects', 'name code');
+    .populate('department', 'name headOfDepartment');
 
     if (!staff) {
       return res.status(404).json({
@@ -275,7 +269,6 @@ const deleteStaff = async (req, res) => {
       });
     }
 
-    // Check if staff is a head of department
     const isHeadOfDepartment = await Department.findOne({ headOfDepartment: staff._id });
     if (isHeadOfDepartment) {
       return res.status(400).json({
@@ -313,19 +306,16 @@ const markAttendance = async (req, res) => {
       });
     }
 
-    // Check if attendance already marked for this date
     const existingAttendance = staff.attendance.find(a => 
       new Date(a.date).toDateString() === new Date(date).toDateString()
     );
 
     if (existingAttendance) {
-      // Update existing attendance
       existingAttendance.status = status || existingAttendance.status;
       existingAttendance.checkIn = checkIn || existingAttendance.checkIn;
       existingAttendance.checkOut = checkOut || existingAttendance.checkOut;
       existingAttendance.notes = notes || existingAttendance.notes;
     } else {
-      // Add new attendance record
       staff.attendance.push({ date, status, checkIn, checkOut, notes });
     }
 
@@ -361,7 +351,7 @@ const addPerformanceReview = async (req, res) => {
 
     staff.performanceReviews.push({
       reviewDate,
-      reviewer: req.user.id, // From auth middleware
+      reviewer: req.user.id,
       rating,
       comments,
       goals,

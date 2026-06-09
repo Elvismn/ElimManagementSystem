@@ -17,7 +17,6 @@ const getVehicles = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    // Build filter object
     const filter = {};
     if (status) filter.status = status;
     if (vehicleType) filter.vehicleType = vehicleType;
@@ -31,7 +30,6 @@ const getVehicles = async (req, res) => {
       ];
     }
 
-    // Sort configuration
     const sortConfig = {};
     sortConfig[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
@@ -44,7 +42,6 @@ const getVehicles = async (req, res) => {
 
     const total = await Vehicle.countDocuments(filter);
 
-    // Get summary statistics
     const stats = await Vehicle.aggregate([
       {
         $group: {
@@ -62,14 +59,14 @@ const getVehicles = async (req, res) => {
       }
     ]);
 
-    // Get vehicles needing service
-    const vehiclesNeedingService = await Vehicle.find({
+    // FIXED: Use $expr for field-to-field comparison instead of string
+    const vehiclesNeedingService = await Vehicle.countDocuments({
+      status: 'active',
       $or: [
-        { currentOdometer: { $gte: '$nextServiceOdometer' } },
-        { nextServiceDate: { $lte: new Date() } }
-      ],
-      status: 'active'
-    }).countDocuments();
+        { $expr: { $gte: ['$currentOdometer', '$nextServiceOdometer'] } },
+        { nextServiceDate: { $lte: new Date(), $ne: null } }
+      ]
+    });
 
     res.json({
       success: true,
@@ -123,7 +120,6 @@ const getVehicle = async (req, res) => {
       });
     }
 
-    // Get fuel records (if FuelRecord model exists)
     let fuelStats = { totalFuelCost: 0, averageFuelEfficiency: 0 };
     let recentFuel = [];
     
@@ -150,11 +146,9 @@ const getVehicle = async (req, res) => {
         fuelStats = fuelAggregation[0];
       }
     } catch (e) {
-      // FuelRecord model not yet created
       console.log('FuelRecord model not available');
     }
 
-    // Get maintenance records (if MaintenanceRecord model exists)
     let maintenanceStats = { totalMaintenanceCost: 0 };
     let recentMaintenance = [];
     
@@ -174,11 +168,9 @@ const getVehicle = async (req, res) => {
         maintenanceStats = maintenanceAggregation[0];
       }
     } catch (e) {
-      // MaintenanceRecord model not yet created
       console.log('MaintenanceRecord model not available');
     }
 
-    // Check service status
     const serviceDue = vehicle.isServiceDue();
 
     res.json({
@@ -214,7 +206,6 @@ const createVehicle = async (req, res) => {
   try {
     const vehicleData = req.body;
 
-    // Check if plate number already exists
     const existingVehicle = await Vehicle.findOne({ 
       plateNumber: vehicleData.plateNumber.toUpperCase() 
     });
@@ -226,17 +217,14 @@ const createVehicle = async (req, res) => {
       });
     }
 
-    // Set current value if not provided (same as purchase price for new vehicles)
     if (!vehicleData.currentValue && vehicleData.purchasePrice) {
       vehicleData.currentValue = vehicleData.purchasePrice;
     }
 
-    // Set next service odometer if not provided
     if (!vehicleData.nextServiceOdometer && vehicleData.currentOdometer) {
       vehicleData.nextServiceOdometer = vehicleData.currentOdometer + 5000;
     }
 
-    // Add createdBy from authenticated user
     vehicleData.createdBy = req.user.id;
 
     const vehicle = await Vehicle.create(vehicleData);
@@ -264,7 +252,6 @@ const updateVehicle = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    // If plate number is being updated, check for duplicates
     if (updateData.plateNumber) {
       const existingVehicle = await Vehicle.findOne({
         plateNumber: updateData.plateNumber.toUpperCase(),
@@ -279,7 +266,6 @@ const updateVehicle = async (req, res) => {
       }
     }
 
-    // Add lastUpdatedBy from authenticated user
     updateData.lastUpdatedBy = req.user.id;
 
     const vehicle = await Vehicle.findByIdAndUpdate(
@@ -393,7 +379,6 @@ const assignDriver = async (req, res) => {
     const { id } = req.params;
     const { driverId } = req.body;
 
-    // Check if driver exists
     if (driverId) {
       const driver = await Staff.findById(driverId);
       if (!driver) {
@@ -466,7 +451,6 @@ const getExpiringDocuments = async (req, res) => {
     
     const vehicles = await Vehicle.getExpiringDocuments(parseInt(days));
 
-    // Format response
     const expiring = {
       insurance: [],
       registration: []
