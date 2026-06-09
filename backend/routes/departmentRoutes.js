@@ -9,7 +9,7 @@ const {
   deleteDepartment,
   getDepartmentStaff,
   updateBudget
-} = require('../contollers/departmentController');
+} = require('../controllers/departmentController');
 
 // All routes are protected (admin only)
 router.use(protect, adminOnly);

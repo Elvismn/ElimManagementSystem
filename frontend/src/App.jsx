@@ -8,18 +8,16 @@ import Students from './pages/Students'
 import Parents from './pages/Parents'
 import Staff from './pages/Staff'
 import Departments from './pages/Department'
+import Stakeholders from './pages/Stakeholders'
+import Vehicles from './pages/Vehicles'
+import Maintenance from './pages/MaintenanceRecords'
+import FuelRecords from './pages/FuelRecord'
+import VehicleDocuments from './pages/VehicleDocuments'
+import Profile from './pages/Profile'
 import './App.css'
 
-// Placeholder components for other routes
-const Vehicles = () => <div className="p-6 bg-white rounded-lg shadow">Vehicles Page (Coming Soon)</div>
-const Stakeholders = () => <div className="p-6 bg-white rounded-lg shadow">Stakeholders Page (Coming Soon)</div>
-const Maintenance = () => <div className="p-6 bg-white rounded-lg shadow">Maintenance Page (Coming Soon)</div>
-const FuelRecords = () => <div className="p-6 bg-white rounded-lg shadow">Fuel Records Page (Coming Soon)</div>
-const VehicleDocuments = () => <div className="p-6 bg-white rounded-lg shadow">Vehicle Documents Page (Coming Soon)</div>
-const Profile = () => <div className="p-6 bg-white rounded-lg shadow">Profile Page (Coming Soon)</div>
-
 // Protected Route wrapper using token check
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children }) => {  
   const token = localStorage.getItem('token')
   if (!token) {
     return <Navigate to="/login" replace />

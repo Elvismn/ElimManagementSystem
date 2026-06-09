@@ -10,7 +10,7 @@ const {
   addChild,
   removeChild,
   toggleStatus
-} = require('../contollers/parentController');
+} = require('../controllers/parentController');
 
 // All routes are protected (admin only)
 router.use(protect, adminOnly);

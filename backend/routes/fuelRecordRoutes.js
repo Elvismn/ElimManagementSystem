@@ -11,7 +11,7 @@ const {
   getFuelAnalytics,
   getUnverifiedFuelRecords,
   bulkVerifyFuelRecords
-} = require('../contollers/fuelRecordController');
+} = require('../controllers/fuelRecordController');
 
 // All routes require authentication and admin privileges
 router.use(protect, adminOnly);

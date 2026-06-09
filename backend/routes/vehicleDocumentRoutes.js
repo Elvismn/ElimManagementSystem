@@ -14,7 +14,7 @@ const {
   getDocumentAnalytics,
   bulkUpdateDocumentStatus,
   getReminderCandidates
-} = require('../contollers/vehicleDocumentController');
+} = require('../controllers/vehicleDocumentController');
 
 // All routes require authentication and admin privileges
 router.use(protect, adminOnly);

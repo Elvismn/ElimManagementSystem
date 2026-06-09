@@ -90,7 +90,7 @@ const staffSchema = new mongoose.Schema({
     institution: { type: String, required: true },
     yearCompleted: { type: Number },
     grade: String,
-    certificate: String // URL to certificate file
+    certificate: String
   }],
   
   certifications: [{
@@ -99,13 +99,10 @@ const staffSchema = new mongoose.Schema({
     issueDate: Date,
     expiryDate: Date,
     certificateId: String,
-    certificateFile: String // URL to certificate file
+    certificateFile: String
   }],
   
-  subjects: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Subject" // Assuming you have a Subject model
-  }],
+  // REMOVED: subjects field
   
   skills: [String],
   
@@ -152,7 +149,7 @@ const staffSchema = new mongoose.Schema({
     number: String,
     issuedDate: Date,
     expiryDate: Date,
-    document: String // URL to ID document
+    document: String
   },
   
   // Profile
@@ -257,7 +254,6 @@ staffSchema.virtual('isActive').get(function() {
 
 // Methods
 staffSchema.methods.calculateLeaveBalance = function() {
-  // You can implement logic here to calculate leave balance based on hire date
   return this.leaveBalance;
 };
 
@@ -266,17 +262,12 @@ staffSchema.methods.markAttendance = function(date, status, notes = '') {
   return this.save();
 };
 
-// Indexes for better query performance
+// Indexes
 staffSchema.index({ employeeId: 1 });
 staffSchema.index({ email: 1 });
 staffSchema.index({ department: 1, position: 1 });
 staffSchema.index({ status: 1 });
 staffSchema.index({ firstName: 1, lastName: 1 });
-
-// Remove auto-populate and use explicit population instead
-// staffSchema.pre('find', function() {
-//   this.populate('user').populate('department').populate('subjects');
-// });
 
 // JSON configuration
 staffSchema.set('toJSON', {

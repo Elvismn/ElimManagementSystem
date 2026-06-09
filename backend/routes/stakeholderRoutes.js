@@ -12,7 +12,7 @@ const {
   updateStatus,
   assignStakeholder,
   addDocument
-} = require('../contollers/stakeholderController');
+} = require('../controllers/stakeholderController');
 
 // All routes are protected (admin only)
 router.use(protect, adminOnly);

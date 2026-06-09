@@ -11,7 +11,7 @@ const {
   assignDriver,
   getVehiclesNeedingService,
   getExpiringDocuments
-} = require('../contollers/vehicleController');
+} = require('../controllers/vehicleController');
 
 // All routes require authentication and admin privileges
 router.use(protect, adminOnly);

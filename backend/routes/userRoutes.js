@@ -7,7 +7,7 @@ const {
   updateProfile,
   changePassword,
   getSystemStats
-} = require('../contollers/userController');
+} = require('../controllers/userController');
 
 // Debug middleware
 router.use((req, res, next) => {

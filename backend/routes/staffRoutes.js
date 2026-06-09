@@ -10,7 +10,7 @@ const {
   markAttendance,
   addPerformanceReview,
   updateStatus
-} = require('../contollers/staffController');
+} = require('../controllers/staffController');
 
 // All routes are protected (admin only)
 router.use(protect, adminOnly);

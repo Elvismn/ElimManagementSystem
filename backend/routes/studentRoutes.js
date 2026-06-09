@@ -9,7 +9,7 @@ const {
   deleteStudent,
   getStudentsByGrade,
   updateStudentStatus
-} = require('../contollers/studentController');
+} = require('../controllers/studentController');
 
 // All routes are protected (admin only)
 router.use(protect, adminOnly);

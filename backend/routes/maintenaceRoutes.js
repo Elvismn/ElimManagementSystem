@@ -12,7 +12,7 @@ const {
   getUpcomingMaintenance,
   getMaintenanceForecast,
   getOverdueMaintenance
-} = require('../contollers/maintenanceController');
+} = require('../controllers/maintenanceController');
 
 // All routes require authentication and admin privileges
 router.use(protect, adminOnly);
